@@ -1,3 +1,5 @@
+import java.time.LocalDate
+
 import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
@@ -12,7 +14,7 @@ object Main extends App {
   implicit val timeout = Timeout(100 seconds)
   var users = twitterDownloader ? Downloader.DownloadProfiles("50.0611591", "19.9383446")
   println(users)
-  var topHashtags = topHashtagDownloader ? HashtagDownloader.DownloadTopHashtags(1963405968,12)
+  var topHashtags = topHashtagDownloader ? HashtagDownloader.DownloadTopHashtags(1963405968,12,LocalDate.now(),12)
   println(topHashtags)
 
 }
