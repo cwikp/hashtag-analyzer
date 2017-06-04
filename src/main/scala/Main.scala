@@ -13,4 +13,7 @@ object Main extends App {
   var users = twitterDownloader ? Downloader.DownloadProfiles("50.0611591", "19.9383446")
   println(users)
 
+  val plotter = system.actorOf(Props(new PlotDrawer()), "plotDrawer")
+  plotter ! PlotDrawer.Draw(Map[String, Long]())
+
 }
