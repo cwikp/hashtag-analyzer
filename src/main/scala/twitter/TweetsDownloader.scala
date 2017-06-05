@@ -1,17 +1,18 @@
-import java.time.LocalDate
-import java.time.ZoneId
+package twitter
+
+import java.time.{LocalDate, ZoneId}
 import java.util.Date
 
-import HashtagDownloader.DownloadResult
 import akka.actor.Actor
 import akka.event.LoggingReceive
 import com.danielasfregola.twitter4s.TwitterRestClient
 import com.danielasfregola.twitter4s.entities.{HashTag, Tweet}
+import twitter.TweetsDownloader.DownloadResult
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-class TopHashtagsDownloader extends Actor {
+class TweetsDownloader extends Actor {
 
   val restClient = TwitterRestClient()
 
@@ -42,13 +43,13 @@ class TopHashtagsDownloader extends Actor {
 
 
   override def receive: Receive = LoggingReceive{
-    case HashtagDownloader.DownloadTopHashtags(user_name,hashtag_number,date,number_of_days_back) =>
+    case TweetsDownloader.DownloadTopHashtags(user_name,hashtag_number,date,number_of_days_back) =>
       sender() ! DownloadResult(downloadTopHashtagsInTime(user_name,hashtag_number,date,number_of_days_back))
   }
 }
 
 
-object HashtagDownloader {
+object TweetsDownloader {
 
   case class DownloadTopHashtags(user_id: Long,hashtag_number : Int, date : LocalDate, number_of_days_back : Int)
 
