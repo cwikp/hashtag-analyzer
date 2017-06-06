@@ -9,51 +9,38 @@ import com.danielasfregola.twitter4s.TwitterRestClient
 import com.danielasfregola.twitter4s.entities.{HashTag, Tweet}
 import twitter.TweetsDownloader.DownloadResult
 
-import scala.concurrent.Await
-import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class TweetsDownloader extends Actor {
 
   val restClient = TwitterRestClient()
 
-
-  def downloadTopHashtagsInTime(user_id: Long, hashtag_number : Int, date : LocalDate, number_of_days_back : Int): Seq[((String,Int),Int)] = {
-    val start_date = Date.from(date.minusDays(number_of_days_back).atStartOfDay(ZoneId.systemDefault).toInstant)
-    val end_date = Date.from(date.atStartOfDay(ZoneId.systemDefault).toInstant)
-    var f = restClient.userTimelineForUserId(user_id = user_id,count = 200)
-    val response = Await.result(f, 100 second)
-    val tweets = response.data
-    val filteredTweets = tweets.filter((t) => (t.created_at.before(end_date))).filter((t) => (t.created_at.after(start_date)))
-    val topHashtags: Seq[((String, Int), Int)] = getTopHashtags(filteredTweets,hashtag_number).zipWithIndex
-    val rankings = topHashtags.map { case ((entity, frequency), idx) => s"[${idx + 1}] $entity (found $frequency times)"}
-    println(s"${user_id.toString.toUpperCase}'S TOP HASHTAGS BETWEEN "+ end_date + " " + start_date)
-    println(rankings.mkString("\n"))
-    return topHashtags;
-  }
-
-  def getTopHashtags(tweets: Seq[Tweet], n: Int): Seq[(String, Int)] = {
-    val hashtags: Seq[Seq[HashTag]] = tweets.map { tweet =>
-      tweet.entities.map(_.hashtags).getOrElse(Seq.empty)
+  def downloadTweets(userId: Long, hashtagsNumber: Int, date: LocalDate, numberOfDaysBack: Int): Future[Unit] = {
+    val startDate = Date.from(date.minusDays(numberOfDaysBack).atStartOfDay(ZoneId.systemDefault).toInstant)
+    val endDate = Date.from(date.atStartOfDay(ZoneId.systemDefault).toInstant)
+    restClient.userTimelineForUserId(user_id = userId, count = 200).map { tweets =>
+      val filteredTweets = tweets.data
+        .filter(_.created_at.before(endDate))
+        .filter(_.created_at.after(startDate))
+        .filter(_.entities.map(_.hashtags).get.nonEmpty)
+      println(filteredTweets.map(t => t.entities.map(_.hashtags)).mkString("\n"))
     }
-
-    val hashtagTexts: Seq[String] = hashtags.flatten.map(_.text.toLowerCase)
-    val hashtagFrequencies: Map[String, Int] = hashtagTexts.groupBy(identity).mapValues(_.size)
-    hashtagFrequencies.toSeq.sortBy { case (entity, frequency) => -frequency }.take(n)
   }
 
 
-  override def receive: Receive = LoggingReceive{
-    case TweetsDownloader.DownloadTopHashtags(user_name,hashtag_number,date,number_of_days_back) =>
-      sender() ! DownloadResult(downloadTopHashtagsInTime(user_name,hashtag_number,date,number_of_days_back))
+  override def receive: Receive = LoggingReceive {
+    case TweetsDownloader.DownloadTweets(user_name, hashtag_number, date, number_of_days_back) =>
+      sender() ! DownloadResult(downloadTweets(user_name, hashtag_number, date, number_of_days_back))
   }
 }
 
 
 object TweetsDownloader {
 
-  case class DownloadTopHashtags(user_id: Long,hashtag_number : Int, date : LocalDate, number_of_days_back : Int)
+  case class DownloadTweets(userId: Long, hashtagsNumber: Int, date: LocalDate, numberOfDaysBack: Int)
 
-  case class DownloadResult(data: Seq[((String,Int),Int)])
+  case class DownloadResult(data: Future[Unit])
 
 }
 
