@@ -17,6 +17,7 @@ object Main extends App {
   val tweetsDownloader = system.actorOf(Props(new TweetsDownloader()),"TweetsDownloader")
   val tweetsAnalyzer = system.actorOf(Props(new TweetsAnalyzer()),"TweetsAnalyzer")
   val topHashtagsFinder = system.actorOf(Props(new TopHashtagsFinder()),"TopHashtagsFinder")
+  val plotter = system.actorOf(Props(new PlotDrawer()), "plotDrawer")
 
   mainActor ! BeginAnalysis
 
