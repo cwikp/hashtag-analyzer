@@ -3,11 +3,11 @@ package twitter
 import akka.actor.Actor
 import akka.event.LoggingReceive
 import com.danielasfregola.twitter4s.entities.{HashTag, Tweet}
-import twitter.TopHashtagsFinder.{FindTopHashtags, TopHashtagsResult}
+import twitter.TopHashtagsFinder.{FindTopHashtags, TopHashtags}
 
-class TopHashtagsFinder extends Actor{
+class TopHashtagsFinder extends Actor {
 
-  def findTopHashtags(tweets: Seq[Tweet], hashtagsNumber: Int): Seq[String] ={
+  def findTopHashtags(tweets: Seq[Tweet], hashtagsNumber: Int): Seq[String] = {
     val topHashtags: Seq[(String, Int)] = getTopHashtags(tweets, hashtagsNumber)
     val rankings = topHashtags.zipWithIndex.map { case ((entity, frequency), idx) => s"[${idx + 1}] $entity (found $frequency times)" }
     println(rankings.mkString("\n"))
@@ -26,7 +26,7 @@ class TopHashtagsFinder extends Actor{
 
   override def receive: Receive = LoggingReceive {
     case FindTopHashtags(tweets, hashtagsNumber) =>
-      TopHashtagsResult(findTopHashtags(tweets, hashtagsNumber))
+      sender ! TopHashtags(findTopHashtags(tweets, hashtagsNumber))
   }
 
 }
@@ -35,6 +35,6 @@ object TopHashtagsFinder {
 
   case class FindTopHashtags(tweets: Seq[Tweet], hashtagsNumber: Int)
 
-  case class TopHashtagsResult(topHashtags: Seq[String])
+  case class TopHashtags(topHashtags: Seq[String])
 
 }

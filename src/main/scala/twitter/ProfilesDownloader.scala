@@ -3,7 +3,7 @@ package twitter
 import akka.actor.Actor
 import akka.event.LoggingReceive
 import com.danielasfregola.twitter4s.TwitterRestClient
-import twitter.ProfilesDownloader.DownloadResult
+import twitter.ProfilesDownloader.DownloadProfilesComplete
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -25,9 +25,9 @@ class ProfilesDownloader extends Actor {
 
   override def receive: Receive = LoggingReceive {
     case ProfilesDownloader.DownloadProfilesByLatLong(lat, long, range, number) =>
-      sender() ! DownloadResult(downloadProfiles(s"geocode:$lat,$long,${range}km", number, 0, 1))
+      sender() ! DownloadProfilesComplete(downloadProfiles(s"geocode:$lat,$long,${range}km", number, 0, 1))
     case ProfilesDownloader.DownloadProfilesByLocation(location, number) =>
-      sender() ! DownloadResult(downloadProfiles(s"from:$location", number, 0, 1))
+      sender() ! DownloadProfilesComplete(downloadProfiles(s"from:$location", number, 0, 1))
   }
 }
 
@@ -37,7 +37,7 @@ object ProfilesDownloader {
 
   case class DownloadProfilesByLocation(location: String, number: BigDecimal = 100)
 
-  case class DownloadResult(data: Seq[Long])
+  case class DownloadProfilesComplete(data: Seq[Long])
 
 }
 
