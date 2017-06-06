@@ -4,7 +4,7 @@ import MainActor.BeginAnalysis
 import akka.actor.Actor
 import akka.event.LoggingReceive
 import com.danielasfregola.twitter4s.entities.Tweet
-import twitter.{ProfilesDownloader, TweetsDownloader}
+import twitter.{ProfilesDownloader, TweetsAnalyzer, TweetsDownloader}
 
 class MainActor extends Actor {
 
@@ -21,15 +21,18 @@ class MainActor extends Actor {
     case TweetsDownloader.DownloadTweetsComplete(data: Seq[Tweet]) =>
       tweetsList = tweetsList ++ data
       checkIfAllTweetsDownloaded()
+    case TweetsAnalyzer.HashtagDates(hashtag, dates) =>
+      println(">>>Hashtag: " + hashtag)
+      println("Dates: " + dates.mkString(", "))
   }
 
   def downloadProfiles(): Unit = {
     // or by lat and long: "50.0611591", "19.9383446"
-    context.actorSelection("../ProfilesDownloader") ! ProfilesDownloader.DownloadProfilesByLocation(Main.LOCATION, 10)
+    context.actorSelection("../ProfilesDownloader") ! ProfilesDownloader.DownloadProfilesByLocation(Main.LOCATION, Main.PROFILES_NUMBER)
   }
 
   def downloadTweets(userId: Long): Unit = {
-    context.actorSelection("../TweetsDownloader") ! TweetsDownloader.DownloadTweets(userId, LocalDate.now(), 7)
+    context.actorSelection("../TweetsDownloader") ! TweetsDownloader.DownloadTweets(userId, Main.DATE, Main.NUMBER_OF_DAYS_BACK)
   }
 
   def checkIfAllTweetsDownloaded(): Unit = {
@@ -39,8 +42,11 @@ class MainActor extends Actor {
     }
   }
 
-  def processTweets(tweetsList: List[Tweet]) = {
-    println(">>> TWEETS LIST SIZE: " + tweetsList.size)
+  def processTweets(tweets: List[Tweet]) = {
+    println("TWEETS NUMBER: " + tweets.size)
+    val topHashtagsFinder = context.actorSelection("../TopHashtagsFinder")
+    context.actorSelection("../TweetsAnalyzer") ! TweetsAnalyzer.AnalyzeTweets(tweets, topHashtagsFinder)
+
   }
 
 }

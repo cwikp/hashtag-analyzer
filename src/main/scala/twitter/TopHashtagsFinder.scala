@@ -10,6 +10,7 @@ class TopHashtagsFinder extends Actor {
   def findTopHashtags(tweets: Seq[Tweet], hashtagsNumber: Int): Seq[String] = {
     val topHashtags: Seq[(String, Int)] = getTopHashtags(tweets, hashtagsNumber)
     val rankings = topHashtags.zipWithIndex.map { case ((entity, frequency), idx) => s"[${idx + 1}] $entity (found $frequency times)" }
+    println("TOP HASHTAGS:")
     println(rankings.mkString("\n"))
     topHashtags.map(_._1)
   }
@@ -26,15 +27,15 @@ class TopHashtagsFinder extends Actor {
 
   override def receive: Receive = LoggingReceive {
     case FindTopHashtags(tweets, hashtagsNumber) =>
-      sender ! TopHashtags(findTopHashtags(tweets, hashtagsNumber))
+      sender ! TopHashtags(findTopHashtags(tweets, hashtagsNumber), tweets)
   }
 
 }
 
 object TopHashtagsFinder {
 
-  case class FindTopHashtags(tweets: Seq[Tweet], hashtagsNumber: Int)
+  case class FindTopHashtags(tweets: Seq[Tweet], hashtagsNumber: Int = 5)
 
-  case class TopHashtags(topHashtags: Seq[String])
+  case class TopHashtags(topHashtags: Seq[String], tweets: Seq[Tweet])
 
 }
