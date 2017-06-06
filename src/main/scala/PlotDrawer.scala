@@ -6,7 +6,7 @@ import com.quantifind.charts.highcharts._
 
 class PlotDrawer extends Actor {
 
-  def drawPlot(data: Seq[Tuple2[String, Seq[Tuple2[Long, Int]]]]): Long = {
+  def drawPlot(data: Seq[(String, Seq[(Long, Int)])]): Long = {
 
     Highchart(Seq(Series(Seq(Data(1, 2))), Series(Seq(Data(1, 2)))), chart = Chart(zoomType = Zoom.xy), yAxis = None )
 
@@ -25,6 +25,6 @@ class PlotDrawer extends Actor {
 
 object PlotDrawer {
 
-  case class Draw(data: Seq[Tuple2[String, Seq[Tuple2[Long, Int]]]])
+  case class Draw(data: Seq[(String, Seq[(Long, Int)])])
 
 }

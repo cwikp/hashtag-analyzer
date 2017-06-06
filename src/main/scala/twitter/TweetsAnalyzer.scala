@@ -28,8 +28,14 @@ class TweetsAnalyzer extends Actor {
           .map(_.text.toLowerCase).contains(topHashtag))
       val tweetDates = tweetsContainingHashtag
         .map(tweet => tweet.created_at)
-      mainActorRef ! HashtagDates(topHashtag, tweetDates)
+      mainActorRef ! HashtagDates(topHashtag, groupDates(tweetDates))
     })
+  }
+
+  private def groupDates(dates: Seq[Date]): Seq[(Long, Int)] ={
+    val timestamps = dates.map(_.getTime)
+    val datesFrequencies: Map[Long, Int] = timestamps.groupBy(identity).mapValues(_.size)
+    datesFrequencies.toSeq.sortBy { case (entity, frequency) => -frequency }
   }
 
 }
@@ -38,6 +44,6 @@ object TweetsAnalyzer {
 
   case class AnalyzeTweets(tweets: List[Tweet], topHashtagFinder: ActorSelection)
 
-  case class HashtagDates(hashtag: String, dates: Seq[Date])
+  case class HashtagDates(hashtag: String, dates: Seq[(Long, Int)])
 
 }

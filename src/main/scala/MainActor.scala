@@ -1,5 +1,3 @@
-import java.time.LocalDate
-
 import MainActor.BeginAnalysis
 import akka.actor.Actor
 import akka.event.LoggingReceive
@@ -24,6 +22,12 @@ class MainActor extends Actor {
     case TweetsAnalyzer.HashtagDates(hashtag, dates) =>
       println(">>>Hashtag: " + hashtag)
       println("Dates: " + dates.mkString(", "))
+      plotCharts(hashtag, dates)
+  }
+
+  def plotCharts(hashtag: String, dates: Seq[(Long, Int)]): Unit = {
+    val data: Seq[(String, Seq[(Long, Int)])] = Seq((hashtag, dates))
+    context.actorSelection("../PlotDrawer") ! PlotDrawer.Draw(data)
   }
 
   def downloadProfiles(): Unit = {
