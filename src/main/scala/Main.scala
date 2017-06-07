@@ -6,13 +6,17 @@ import twitter._
 
 object Main extends App {
 
-  val LOCATION = "Krakow"
-  val PROFILES_NUMBER = 60
+  val LOCATION = "New York"
+  val PROFILES_NUMBER = 1000
   val DATE = LocalDate.now()
   val NUMBER_OF_DAYS_BACK = 7
   val LEVENSHTEIN_DISTANCE = 1
   val TIMEOUT = 60
   val finder = Finder.UserAwareFinder
+
+  val KRAKOW = ProfilesDownloader.DownloadProfilesByLatLong("50.0611591", "19.9383446", 100)
+  val LONDON = ProfilesDownloader.DownloadProfilesByLatLong("51.507351", "-0.127758", 100)
+  val MOSCOW = ProfilesDownloader.DownloadProfilesByLatLong("55.755826", "37.617300", 100)
 
   val system = ActorSystem("Hashtag_analyzer")
   val mainActor = system.actorOf(Props(new MainActor()), "mainActor")

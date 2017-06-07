@@ -17,12 +17,13 @@ class PlotDrawer extends Actor {
       spline(d._2.map(t => t._1).toList, d._2.map(t => t._2))
       title(s"Hashtag: #${d._1}")
       xAxis("Date")
+      xAxisType(AxisType.datetime)
       yAxis("Count")
 
       if (single) {
         hold()
-        legendLabels = legendLabels ++ List(s"${d._1} occurrences")
-      } else legendLabels = List(s"${d._1} occurrences")
+        legendLabels = legendLabels ++ List(s"${d._1}")
+      } else legendLabels = List(s"${d._1}")
       legend(legendLabels)
     })
 

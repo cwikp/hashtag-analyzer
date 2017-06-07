@@ -31,7 +31,9 @@ class MainActor extends Actor {
     case TweetsDownloader.DownloadTweetsComplete(data: Seq[Tweet]) =>
       tweetsList = tweetsList ++ data
       checkIfAllTweetsDownloaded()
-    case DownloadTimeout => processTweets()
+    case DownloadTimeout =>
+      println(s"[WARN] Timeout")
+      processTweets()
     case TweetsAnalyzer.HashtagDates(hashtag, dates) =>
       plotCharts(hashtag, dates)
   }
@@ -43,7 +45,7 @@ class MainActor extends Actor {
 
   def downloadProfiles(): Unit = {
     // or by lat and long: "50.0611591", "19.9383446"
-    context.actorSelection("../ProfilesDownloader") ! ProfilesDownloader.DownloadProfilesByLatLong("50.0611591", "19.9383446", 100)
+    context.actorSelection("../ProfilesDownloader") ! Main.KRAKOW
   }
 
   def downloadTweets(userId: Long): Unit = {
@@ -53,16 +55,18 @@ class MainActor extends Actor {
   def checkIfAllTweetsDownloaded(): Unit = {
     userProfilesProcessed += 1
     print(".")
-    if (userProfilesProcessed >= userProfiles && !processed) {
+    if (userProfilesProcessed >= userProfiles) {
       processTweets()
     }
   }
 
   private def processTweets() = {
-    processed = true
-    println("TWEETS TOTAL NUMBER: " + tweetsList.size)
-    val topHashtagsFinder = hashtagFinder(Main.finder)
-    context.actorSelection("../TweetsAnalyzer") ! TweetsAnalyzer.AnalyzeTweets(tweetsList, topHashtagsFinder)
+    if (!processed) {
+      processed = true
+      println("TWEETS TOTAL NUMBER: " + tweetsList.size)
+      val topHashtagsFinder = hashtagFinder(Main.finder)
+      context.actorSelection("../TweetsAnalyzer") ! TweetsAnalyzer.AnalyzeTweets(tweetsList, topHashtagsFinder)
+    }
   }
 
   private def hashtagFinder(finder: Finder) = {
