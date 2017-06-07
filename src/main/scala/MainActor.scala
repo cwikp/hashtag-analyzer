@@ -13,15 +13,18 @@ class MainActor extends Actor {
   override def receive: Receive = LoggingReceive {
     case BeginAnalysis =>
       downloadProfiles()
+      println(s"BEGIN ANALYSIS")
+      println(s"Place: ${Main.LOCATION}, Profiles Number: ${Main.PROFILES_NUMBER}")
+      println(s"Date: ${Main.DATE}, Number of days back: ${Main.NUMBER_OF_DAYS_BACK}")
     case ProfilesDownloader.DownloadProfilesComplete(data: Seq[Long]) =>
       userProfiles = data.size
+      println(s"\nProfiles downloaded: $userProfiles")
+      println(s"\nDownloading tweets from users")
       data.foreach(id => downloadTweets(id))
     case TweetsDownloader.DownloadTweetsComplete(data: Seq[Tweet]) =>
       tweetsList = tweetsList ++ data
       checkIfAllTweetsDownloaded()
     case TweetsAnalyzer.HashtagDates(hashtag, dates) =>
-      println(">>>Hashtag: " + hashtag)
-      println("Dates: " + dates.mkString(", "))
       plotCharts(hashtag, dates)
   }
 
@@ -41,16 +44,16 @@ class MainActor extends Actor {
 
   def checkIfAllTweetsDownloaded(): Unit = {
     userProfilesProcessed += 1
+    print(".")
     if (userProfilesProcessed >= userProfiles) {
       processTweets(tweetsList)
     }
   }
 
   def processTweets(tweets: List[Tweet]) = {
-    println("TWEETS NUMBER: " + tweets.size)
+    println("\nTWEETS TOTAL NUMBER: " + tweets.size)
     val topHashtagsFinder = context.actorSelection("../TopHashtagsFinder")
     context.actorSelection("../TweetsAnalyzer") ! TweetsAnalyzer.AnalyzeTweets(tweets, topHashtagsFinder)
-
   }
 
 }

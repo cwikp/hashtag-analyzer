@@ -19,7 +19,6 @@ class ProfilesDownloader extends Actor {
     val future = restClient.searchForUser(query, page = page, include_entities = false)
     val result = Await.result(future, 100 second)
 
-    result.data.foreach(d => println(d.id, d.location))
     result.data.map(f => f.id) ++ downloadProfiles(query, number, current + result.data.size, page + 1)
   }
 

@@ -32,8 +32,9 @@ class TweetsAnalyzer extends Actor {
     })
   }
 
-  private def groupDates(dates: Seq[Date]): Seq[(Long, Int)] ={
-    val timestamps = dates.map(_.getTime)
+  private def groupDates(dates: Seq[Date]): Seq[(Long, Int)] = {
+    val oneDay = 24 * 60 * 60 * 1000
+    val timestamps = dates.map(_.getTime / oneDay)
     val datesFrequencies: Map[Long, Int] = timestamps.groupBy(identity).mapValues(_.size)
     datesFrequencies.toSeq.sortBy { case (entity, frequency) => -frequency }
   }

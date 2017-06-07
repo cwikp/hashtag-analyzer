@@ -24,7 +24,6 @@ class TweetsDownloader extends Actor {
         .filter(_.created_at.before(endDate))
         .filter(_.created_at.after(startDate))
         .filter(_.entities.map(_.hashtags).get.nonEmpty)
-      println(filteredTweets.map(t => t.entities.map(_.hashtags)).mkString("\n"))
       sender ! DownloadTweetsComplete(filteredTweets)
     }
   }
