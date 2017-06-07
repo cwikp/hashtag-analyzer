@@ -7,11 +7,12 @@ import twitter._
 object Main extends App {
 
   val LOCATION = "Krakow"
-  val PROFILES_NUMBER = 5
+  val PROFILES_NUMBER = 60
   val DATE = LocalDate.now()
   val NUMBER_OF_DAYS_BACK = 7
   val LEVENSHTEIN_DISTANCE = 1
-  val finder = Finder.TopSimilarHashtagFinder
+  val TIMEOUT = 60
+  val finder = Finder.UserAwareFinder
 
   val system = ActorSystem("Hashtag_analyzer")
   val mainActor = system.actorOf(Props(new MainActor()), "mainActor")

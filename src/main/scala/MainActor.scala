@@ -1,16 +1,20 @@
 import Main.Finder
 import Main.Finder.Finder
-import MainActor.BeginAnalysis
+import MainActor.{BeginAnalysis, DownloadTimeout}
 import akka.actor.Actor
 import akka.event.LoggingReceive
 import com.danielasfregola.twitter4s.entities.Tweet
 import twitter.{ProfilesDownloader, TweetsAnalyzer, TweetsDownloader}
+import scala.concurrent.ExecutionContext.Implicits.global
+
+import scala.concurrent.duration._
 
 class MainActor extends Actor {
 
   var userProfiles = 0
   var userProfilesProcessed = 0
   var tweetsList: List[Tweet] = List.empty
+  var processed = false
 
   override def receive: Receive = LoggingReceive {
     case BeginAnalysis =>
@@ -22,22 +26,24 @@ class MainActor extends Actor {
       userProfiles = data.size
       println(s"\nProfiles downloaded: $userProfiles")
       println(s"\nDownloading tweets from users")
+      setDownloadTimeout()
       data.foreach(id => downloadTweets(id))
     case TweetsDownloader.DownloadTweetsComplete(data: Seq[Tweet]) =>
       tweetsList = tweetsList ++ data
       checkIfAllTweetsDownloaded()
+    case DownloadTimeout => processTweets()
     case TweetsAnalyzer.HashtagDates(hashtag, dates) =>
       plotCharts(hashtag, dates)
   }
 
   def plotCharts(hashtag: String, dates: Seq[(Long, Int)]): Unit = {
     val data: Seq[(String, Seq[(Long, Int)])] = Seq((hashtag, dates))
-    context.actorSelection("../PlotDrawer") ! PlotDrawer.Draw(data)
+    context.actorSelection("../PlotDrawer") ! PlotDrawer.Draw(data, single = true)
   }
 
   def downloadProfiles(): Unit = {
     // or by lat and long: "50.0611591", "19.9383446"
-    context.actorSelection("../ProfilesDownloader") ! ProfilesDownloader.DownloadProfilesByLocation(Main.LOCATION, Main.PROFILES_NUMBER)
+    context.actorSelection("../ProfilesDownloader") ! ProfilesDownloader.DownloadProfilesByLatLong("50.0611591", "19.9383446", 100)
   }
 
   def downloadTweets(userId: Long): Unit = {
@@ -47,15 +53,16 @@ class MainActor extends Actor {
   def checkIfAllTweetsDownloaded(): Unit = {
     userProfilesProcessed += 1
     print(".")
-    if (userProfilesProcessed >= userProfiles) {
-      processTweets(tweetsList)
+    if (userProfilesProcessed >= userProfiles && !processed) {
+      processTweets()
     }
   }
 
-  def processTweets(tweets: List[Tweet]) = {
-    println("TWEETS TOTAL NUMBER: " + tweets.size)
+  private def processTweets() = {
+    processed = true
+    println("TWEETS TOTAL NUMBER: " + tweetsList.size)
     val topHashtagsFinder = hashtagFinder(Main.finder)
-    context.actorSelection("../TweetsAnalyzer") ! TweetsAnalyzer.AnalyzeTweets(tweets, topHashtagsFinder)
+    context.actorSelection("../TweetsAnalyzer") ! TweetsAnalyzer.AnalyzeTweets(tweetsList, topHashtagsFinder)
   }
 
   private def hashtagFinder(finder: Finder) = {
@@ -66,10 +73,16 @@ class MainActor extends Actor {
     }
   }
 
+  private def setDownloadTimeout() = {
+    context.system.scheduler.scheduleOnce(Main.TIMEOUT seconds, self, DownloadTimeout)
+  }
+
 }
 
 object MainActor {
 
   case object BeginAnalysis
+
+  case object DownloadTimeout
 
 }
