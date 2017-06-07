@@ -36,7 +36,7 @@ class TweetsAnalyzer extends Actor {
     val oneDay = 24 * 60 * 60 * 1000
     val timestamps = dates.map(_.getTime / oneDay)
     val datesFrequencies: Map[Long, Int] = timestamps.groupBy(identity).mapValues(_.size)
-    datesFrequencies.toSeq.sortBy { case (entity, frequency) => -frequency }
+    datesFrequencies.toSeq.sortBy { case (entity, frequency) => entity }
   }
 
 }
