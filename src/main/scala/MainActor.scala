@@ -1,3 +1,5 @@
+import Main.Finder
+import Main.Finder.Finder
 import MainActor.BeginAnalysis
 import akka.actor.Actor
 import akka.event.LoggingReceive
@@ -52,8 +54,16 @@ class MainActor extends Actor {
 
   def processTweets(tweets: List[Tweet]) = {
     println("TWEETS TOTAL NUMBER: " + tweets.size)
-    val topHashtagsFinder = if (Main.USER_AWARE_FINDER) context.actorSelection("../UserAwareTopHashtagsFinder") else context.actorSelection("../TopHashtagsFinder")
+    val topHashtagsFinder = hashtagFinder(Main.finder)
     context.actorSelection("../TweetsAnalyzer") ! TweetsAnalyzer.AnalyzeTweets(tweets, topHashtagsFinder)
+  }
+
+  private def hashtagFinder(finder: Finder) = {
+    finder match {
+      case Finder.TopHashtagFinder        => context.actorSelection("../TopHashtagsFinder")
+      case Finder.TopSimilarHashtagFinder => context.actorSelection("../TopSimilarHashtagFinder")
+      case Finder.UserAwareFinder         => context.actorSelection("../UserAwareTopHashtagsFinder")
+    }
   }
 
 }

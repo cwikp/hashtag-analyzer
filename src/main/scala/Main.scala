@@ -7,10 +7,11 @@ import twitter._
 object Main extends App {
 
   val LOCATION = "Krakow"
-  val PROFILES_NUMBER = 10
+  val PROFILES_NUMBER = 5
   val DATE = LocalDate.now()
   val NUMBER_OF_DAYS_BACK = 7
-  val USER_AWARE_FINDER = true
+  val LEVENSHTEIN_DISTANCE = 1
+  val finder = Finder.TopSimilarHashtagFinder
 
   val system = ActorSystem("Hashtag_analyzer")
   val mainActor = system.actorOf(Props(new MainActor()), "mainActor")
@@ -19,9 +20,16 @@ object Main extends App {
   val tweetsAnalyzer = system.actorOf(Props(new TweetsAnalyzer()),"TweetsAnalyzer")
   val topHashtagsFinder = system.actorOf(Props(new TopHashtagsFinder()),"TopHashtagsFinder")
   val userAwareTopHashtagsFinder = system.actorOf(Props(new UserAwareTopHashTagFinder()),"UserAwareTopHashtagsFinder")
+  val topSimilarHashtagFinder = system.actorOf(Props(new TopSimilarHashtagFinder(LEVENSHTEIN_DISTANCE)),"TopSimilarHashtagFinder")
   val plotter = system.actorOf(Props(new PlotDrawer()), "PlotDrawer")
 
   mainActor ! BeginAnalysis
 
   //  System.exit(0)
+
+  object Finder extends Enumeration {
+    type Finder = Value
+    val TopHashtagFinder, UserAwareFinder, TopSimilarHashtagFinder = Value
+  }
+
 }

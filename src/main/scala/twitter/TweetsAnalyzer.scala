@@ -16,8 +16,12 @@ class TweetsAnalyzer extends Actor {
     case AnalyzeTweets(tweets, topHashtagFinder) =>
       topHashtagFinder ! TopHashtagsFinder.FindTopHashtags(tweets)
       mainActorRef = sender
+
     case TopHashtagsFinder.TopHashtags(topHashtags, tweets) =>
       sendTopHashtagDates(topHashtags, tweets)
+
+    case TopSimilarHashtagFinder.TopSimilarHashtags(topHashtags, tweets) =>
+      sendTopSimilarHashtagDates(topHashtags, tweets)
   }
 
   private def sendTopHashtagDates(topHashtags: Seq[String], tweets: Seq[Tweet]): Unit = {
@@ -30,6 +34,23 @@ class TweetsAnalyzer extends Actor {
         .map(tweet => tweet.created_at)
       mainActorRef ! HashtagDates(topHashtag, groupDates(tweetDates))
     })
+  }
+
+  private def sendTopSimilarHashtagDates(topSimilarHashtags: Seq[Seq[String]], tweets: Seq[Tweet]): Unit = {
+    topSimilarHashtags.filter(_.nonEmpty).foreach(
+      topHashtags => {
+        val dates = topHashtags.flatMap(topHashtag => {
+          val tweetsContainingHashtag: Seq[Tweet] = tweets.filter(tweet =>
+            tweet.entities
+              .map(_.hashtags).getOrElse(Seq.empty)
+              .map(_.text.toLowerCase).contains(topHashtag))
+
+         tweetsContainingHashtag
+            .map(tweet => tweet.created_at)
+        })
+        mainActorRef ! HashtagDates(topHashtags.mkString(", "), groupDates(dates))
+      }
+    )
   }
 
   private def groupDates(dates: Seq[Date]): Seq[(Long, Int)] = {
