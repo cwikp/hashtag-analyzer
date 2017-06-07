@@ -48,7 +48,7 @@ class MainActor extends Actor {
 
   def processTweets(tweets: List[Tweet]) = {
     println("TWEETS NUMBER: " + tweets.size)
-    val topHashtagsFinder = context.actorSelection("../TopHashtagsFinder")
+    val topHashtagsFinder = if (Main.USER_AWARE_FINDER) context.actorSelection("../UserAwareTopHashtagsFinder") else context.actorSelection("../TopHashtagsFinder")
     context.actorSelection("../TweetsAnalyzer") ! TweetsAnalyzer.AnalyzeTweets(tweets, topHashtagsFinder)
 
   }
