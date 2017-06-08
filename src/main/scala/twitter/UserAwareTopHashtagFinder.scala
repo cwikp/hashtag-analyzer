@@ -5,7 +5,7 @@ import akka.event.LoggingReceive
 import com.danielasfregola.twitter4s.entities.{HashTag, Tweet, User}
 import twitter.TopHashtagsFinder.{FindTopHashtags, TopHashtags}
 
-class UserAwareTopHashTagFinder extends Actor {
+class UserAwareTopHashtagFinder extends Actor {
 
   def findTopHashtags(tweets: Seq[Tweet], hashtagsNumber: Int): Seq[String] = {
     val topHashtags: Seq[(String, Int)] = getTopHashtags(tweets, hashtagsNumber)

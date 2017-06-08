@@ -45,7 +45,7 @@ class MainActor extends Actor {
 
   def downloadProfiles(): Unit = {
     // or by lat and long: "50.0611591", "19.9383446"
-    context.actorSelection("../ProfilesDownloader") ! Main.KRAKOW
+    context.actorSelection("../ProfilesDownloader") ! Main.MOSCOW
   }
 
   def downloadTweets(userId: Long): Unit = {

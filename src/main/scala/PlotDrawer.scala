@@ -14,16 +14,19 @@ class PlotDrawer extends Actor {
     Highchart(Seq(Series(Seq(Data(1, 2))), Series(Seq(Data(1, 2)))), chart = Chart(zoomType = Zoom.xy), yAxis = None)
 
     data.foreach(d => {
-      spline(d._2.map(t => t._1).toList, d._2.map(t => t._2))
-      title(s"Hashtag: #${d._1}")
-      xAxis("Date")
-      xAxisType(AxisType.datetime)
-      yAxis("Count")
-
       if (single) {
         hold()
         legendLabels = legendLabels ++ List(s"${d._1}")
       } else legendLabels = List(s"${d._1}")
+
+      val chartTitle = legendLabels.map(h => s"#$h").mkString(", ")
+
+      spline(d._2.map(t => t._1).toList, d._2.map(t => t._2))
+      title(s"Hashtags: $chartTitle")
+      xAxis("Date")
+      xAxisType(AxisType.datetime)
+      yAxis("Count")
+
       legend(legendLabels)
     })
 
